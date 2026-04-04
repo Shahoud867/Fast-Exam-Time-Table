@@ -169,7 +169,7 @@ main{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:2rem 1.25
 @keyframes fup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 footer{text-align:center;padding:2rem 1rem;font-size:10px;font-family:var(--mono);color:var(--t3);position:relative;z-index:1}
 @media(max-width:820px){.social-link .sl{display:none}.social-link{padding:4px 8px}}
-@media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr)};nav{padding:0 1rem;height:auto;min-height:54px;flex-wrap:wrap;gap:8px}.nav-right{margin-left:auto;display:grid;grid-template-columns:auto auto;grid-template-areas:"panic share" "github linkedin";gap:6px;justify-content:end}#panic-btn{grid-area:panic}#share-btn{grid-area:share}.social-github{grid-area:github}.social-linkedin{grid-area:linkedin}main{padding:1.25rem 1rem 5rem}.filter-row{flex-direction:column;align-items:stretch}.go-btn{width:100%}}
+@media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr)};nav{padding:calc(6px + env(safe-area-inset-top)) 1rem 6px;height:auto;min-height:54px;flex-wrap:wrap;gap:8px;align-items:flex-start}.nav-right{margin-left:auto;display:grid;grid-template-columns:auto auto;grid-template-areas:"panic share" "github linkedin";gap:6px;justify-content:end}#panic-btn{grid-area:panic;margin-top:3px}#share-btn{grid-area:share;margin-top:3px}.social-github{grid-area:github}.social-linkedin{grid-area:linkedin}main{padding:1.25rem 1rem 5rem}.filter-row{flex-direction:column;align-items:stretch}.go-btn{width:100%}}
 </style>
 </head>
 <body>
@@ -602,7 +602,7 @@ function renderPanic() {
 function setupBanner() {
   const now = new Date(), next = CUR.find(e => toDate(e) > now);
   if (!next) return;
-  const dt = toDate(next), days = Math.ceil((dt - now) / 86400000);
+  const days = Math.max(0, daysUntil(next));
   document.getElementById('nc').textContent = next.name;
   document.getElementById('nm').textContent = fmtFull(next.date) + ' · ' + next.time;
   const badge = document.getElementById('nbadge');
@@ -678,7 +678,13 @@ function toDate(e) {
   if (m) { h = parseInt(m[1]); mn = parseInt(m[2]); if (m[3].toUpperCase() === 'PM' && h !== 12) h += 12; if (m[3].toUpperCase() === 'AM' && h === 12) h = 0; }
   const d = new Date(e.date + 'T00:00:00'); d.setHours(h, mn, 0, 0); return d;
 }
-function daysUntil(e) { return Math.ceil((toDate(e) - new Date()) / 86400000); }
+function daysUntil(e) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const parts = e.date.split('-').map(Number);
+  const examDay = new Date(parts[0], parts[1] - 1, parts[2]);
+  return Math.round((examDay - today) / 86400000);
+}
 function fmtFull(ds) { return new Date(ds + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); }
 function fmtShort(ds) { return new Date(ds + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); }
 
