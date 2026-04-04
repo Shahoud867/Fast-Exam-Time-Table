@@ -1,0 +1,5 @@
+{
+  "buildCommand": "npm install && node scripts/parse-datesheet.js",
+  "outputDirectory": "public",
+  "installCommand": "npm install"
+}
