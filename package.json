@@ -1,0 +1,12 @@
+{
+  "name": "fast-isb-exam-portal",
+  "version": "1.0.0",
+  "description": "FAST-NUCES Islamabad Exam Portal",
+  "scripts": {
+    "build": "node scripts/parse-datesheet.js",
+    "dev": "node scripts/parse-datesheet.js && npx serve public"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  }
+}
