@@ -49,6 +49,14 @@ npm run dev
 # Open http://localhost:3000
 ```
 
+## Refresh exams.json manually
+
+```bash
+npm run parse
+```
+
+Use this after replacing `datesheet.xlsx` if you want to regenerate data before pushing.
+
 ---
 
 ## Features
