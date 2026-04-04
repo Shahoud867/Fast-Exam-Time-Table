@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAST ISB — Exam Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--g:#1a7a3e;--gl:#22a352;--gd:#0f4a25;--red:#e03535;--amber:#e08a00;--bg:#09100d;--bg2:#0f1a13;--sf:#1a2620;--bd:rgba(34,163,82,.13);--bd2:rgba(34,163,82,.22);--t:#e8f5ee;--t2:#8fb59c;--t3:#4d7a5a;--mono:'DM Mono',monospace;--head:'Syne',sans-serif;--body:'DM Sans',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--t);font-family:var(--body);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--bd) 1px,transparent 1px),linear-gradient(90deg,var(--bd) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(9,16,13,.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:54px}
+.nav-brand{font-family:var(--head);font-size:16px;font-weight:800;color:var(--gl);display:flex;align-items:center;gap:8px}
+.nav-brand span{color:var(--t2);font-weight:400;font-size:12px}
+.nav-meta{font-family:var(--mono);font-size:10px;color:var(--t3);margin-left:4px}
+.nav-right{display:flex;gap:6px;align-items:center}
+.chip{font-size:11px;font-family:var(--mono);padding:3px 10px;border-radius:20px;border:1px solid var(--bd2);color:var(--t2);background:var(--sf);cursor:pointer;transition:all .2s}
+.chip:hover,.chip.on{background:var(--gd);color:var(--gl);border-color:var(--g)}
+
+/* MAIN */
+main{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:2rem 1.25rem 6rem}
+
+/* LOADING SCREEN */
+#loading{text-align:center;padding:5rem 1rem}
+.spinner-wrap{margin-bottom:1.5rem}
+.big-spinner{width:40px;height:40px;border:3px solid var(--bd2);border-top-color:var(--gl);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-title{font-family:var(--head);font-size:1.4rem;font-weight:800;color:var(--t);margin-bottom:.4rem}
+.load-sub{font-size:13px;color:var(--t3);font-family:var(--mono)}
+
+/* ERROR */
+#error-msg{display:none;text-align:center;padding:4rem 1rem}
+.err-icon{font-size:3rem;margin-bottom:1rem}
+.err-title{font-family:var(--head);font-size:1.2rem;font-weight:700;color:var(--red);margin-bottom:.5rem}
+.err-sub{font-size:13px;color:var(--t2)}
+
+/* HERO */
+.hero{text-align:center;padding:2.5rem 0 2.5rem}
+.eyebrow{font-family:var(--mono);font-size:11px;color:var(--gl);letter-spacing:2px;text-transform:uppercase;margin-bottom:.75rem;opacity:.8}
+.hero h1{font-family:var(--head);font-size:clamp(2rem,6vw,3.6rem);font-weight:800;line-height:1.05;letter-spacing:-1.5px;margin-bottom:.5rem}
+.hero h1 em{color:var(--gl);font-style:normal}
+.hero-sub{color:var(--t2);font-size:14px;font-weight:300}
+
+/* CONFIG */
+.config{background:var(--bg2);border:1px solid var(--bd);border-radius:16px;padding:1.4rem 1.5rem;margin-bottom:1.25rem}
+.mode-row{display:flex;gap:8px;margin-bottom:1.1rem}
+.filter-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:10px;font-family:var(--mono);color:var(--t3);letter-spacing:1px;text-transform:uppercase}
+.seg{display:flex;gap:4px;flex-wrap:wrap}
+.seg-btn{font-size:12px;font-family:var(--mono);padding:5px 13px;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--t2);cursor:pointer;transition:all .18s}
+.seg-btn:hover{border-color:var(--g);color:var(--t)}
+.seg-btn.on{background:var(--gd);color:var(--gl);border-color:var(--g)}
+.go-btn{background:var(--g);color:#fff;font-family:var(--head);font-size:14px;font-weight:700;padding:9px 22px;border:none;border-radius:10px;cursor:pointer;transition:background .2s,transform .12s;white-space:nowrap;align-self:flex-end}
+.go-btn:hover{background:var(--gl);transform:translateY(-1px)}
+#cpanel{display:none;margin-top:.85rem}
+#cpanel.on{display:block}
+.cpick{max-height:190px;overflow-y:auto;display:flex;flex-wrap:wrap;gap:5px;padding:4px 0;margin-top:6px}
+.cpick label{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:11px;font-family:var(--mono);color:var(--t2);padding:3px 9px;border:1px solid var(--bd);border-radius:7px;transition:all .15s}
+.cpick label:hover{border-color:var(--g);color:var(--t)}
+.cpick input{accent-color:var(--g)}
+
+/* BANNER */
+#next-banner{border:1px solid var(--bd2);border-radius:14px;background:var(--bg2);padding:1.1rem 1.4rem;margin-bottom:1.25rem;display:none}
+#next-banner.on{display:block;animation:fup .4s ease}
+.blabel{font-size:10px;font-family:var(--mono);color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.bcourse{font-family:var(--head);font-size:1.2rem;font-weight:800;color:var(--t);margin:.2rem 0}
+.bmeta{font-size:12px;color:var(--t2);margin-bottom:.75rem}
+.cd-row{display:flex;gap:10px;flex-wrap:wrap}
+.cd-blk{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:.45rem .8rem;text-align:center;min-width:54px}
+.cd-n{font-family:var(--head);font-size:1.5rem;font-weight:800;color:var(--gl);line-height:1}
+.cd-l{font-size:9px;font-family:var(--mono);color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.udot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.u-r{background:var(--red);animation:pls 1s infinite}.u-a{background:var(--amber)}.u-g{background:var(--gl)}
+@keyframes pls{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* NOTIF */
+#nbar{background:var(--sf);border:1px solid var(--bd2);border-radius:10px;padding:.7rem 1rem;margin-bottom:1rem;display:none;align-items:center;justify-content:space-between;gap:1rem}
+#nbar.on{display:flex}
+#nbar p{font-size:13px;color:var(--t2)}
+.ny{font-size:11px;font-family:var(--mono);padding:5px 14px;border-radius:8px;background:var(--gd);color:var(--gl);border:1px solid var(--g);cursor:pointer}
+.nn{font-size:11px;font-family:var(--mono);padding:5px 14px;border-radius:8px;background:transparent;color:var(--t3);border:1px solid var(--bd);cursor:pointer}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.25rem}
+.stat{background:var(--bg2);border:1px solid var(--bd);border-radius:12px;padding:.8rem 1rem}
+.stat .sl{font-size:10px;font-family:var(--mono);color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.stat .sv{font-family:var(--head);font-size:1.5rem;font-weight:800;color:var(--t);line-height:1}
+.stat .ss{font-size:11px;color:var(--t3);margin-top:2px}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:8px;margin-bottom:.85rem;flex-wrap:wrap;align-items:center}
+.sw{flex:1;min-width:180px;position:relative}
+.sw input{width:100%;background:var(--bg2);border:1px solid var(--bd);border-radius:10px;color:var(--t);font-family:var(--body);font-size:13px;padding:8px 12px 8px 34px;outline:none;transition:border .2s}
+.sw input:focus{border-color:var(--g)}
+.si{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:13px;pointer-events:none}
+.xbtn{font-size:11px;font-family:var(--mono);padding:7px 12px;border-radius:9px;border:1px solid var(--bd);background:var(--sf);color:var(--t2);cursor:pointer;transition:all .2s;white-space:nowrap}
+.xbtn:hover{border-color:var(--g);color:var(--gl)}
+
+/* VIEW TABS */
+.vtabs{display:flex;gap:4px;margin-bottom:1rem}
+.vt{font-size:11px;font-family:var(--mono);padding:5px 14px;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--t3);cursor:pointer;transition:all .18s}
+.vt.on{background:var(--sf);color:var(--t);border-color:var(--bd2)}
+
+/* EXAM LIST */
+#exam-list{display:flex;flex-direction:column;gap:8px}
+.dg-lbl{font-family:var(--mono);font-size:10px;color:var(--t3);letter-spacing:2px;text-transform:uppercase;padding:.65rem 0 .2rem;border-top:1px solid var(--bd);margin-top:.4rem}
+.dg-lbl:first-child{border-top:none;margin-top:0}
+.ec{background:var(--bg2);border:1px solid var(--bd);border-radius:13px;padding:.9rem 1.2rem;display:flex;align-items:center;gap:.9rem;transition:border-color .2s,background .2s;position:relative;overflow:hidden;cursor:default;animation:fup .3s ease both}
+.ec::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--g);border-radius:3px 0 0 3px}
+.ec.urg::before{background:var(--red)}.ec.wrn::before{background:var(--amber)}
+.ec:hover{background:var(--sf);border-color:var(--bd2)}
+.edate{text-align:center;min-width:46px}
+.eday{font-family:var(--head);font-size:1.4rem;font-weight:800;color:var(--t);line-height:1}
+.emon{font-size:10px;font-family:var(--mono);color:var(--t3);text-transform:uppercase}
+.einfo{flex:1;min-width:0}
+.ecode{font-size:10px;font-family:var(--mono);color:var(--t3);margin-bottom:2px}
+.ename{font-family:var(--head);font-size:14px;font-weight:700;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.emeta{font-size:11px;color:var(--t2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.eright{text-align:right;flex-shrink:0}
+.etime{font-family:var(--mono);font-size:12px;color:var(--gl)}
+.edl{font-size:10px;font-family:var(--mono);margin-top:3px;padding:2px 7px;border-radius:20px;display:inline-block}
+.dl-r{background:rgba(224,53,53,.15);color:var(--red)}.dl-a{background:rgba(224,138,0,.15);color:var(--amber)}.dl-g{background:rgba(26,122,62,.15);color:var(--gl)}.dl-d{background:var(--sf);color:var(--t3)}
+
+/* CALENDAR */
+#cal-view{display:none}#cal-view.on{display:block}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem}
+.cm{font-family:var(--head);font-size:1rem;font-weight:700}
+.cn{background:var(--sf);border:1px solid var(--bd);border-radius:8px;color:var(--t2);cursor:pointer;padding:3px 12px;font-size:13px;transition:all .2s}
+.cn:hover{border-color:var(--g);color:var(--gl)}
+.cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cdh{font-size:9px;font-family:var(--mono);color:var(--t3);text-transform:uppercase;text-align:center;padding:3px 0;letter-spacing:1px}
+.cc{min-height:64px;background:var(--bg2);border:1px solid var(--bd);border-radius:9px;padding:5px;transition:border-color .2s}
+.cc.empty{background:transparent;border-color:transparent}.cc.today{border-color:var(--g)}
+.cdate{font-size:10px;font-family:var(--mono);color:var(--t3);margin-bottom:3px}
+.cev{font-size:8px;font-family:var(--mono);background:var(--gd);color:var(--gl);border-radius:3px;padding:2px 3px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cev.urg-ev{background:rgba(224,53,53,.2);color:var(--red)}.cev.wrn-ev{background:rgba(224,138,0,.15);color:var(--amber)}
+
+/* LOAD */
+#load-view{display:none}#load-view.on{display:block}
+.lb-row{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.lb-lbl{font-size:10px;font-family:var(--mono);color:var(--t3);width:90px;flex-shrink:0;text-align:right}
+.lb-track{flex:1;height:26px;background:var(--sf);border-radius:6px;overflow:hidden}
+.lb-fill{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:8px;transition:width .6s ease}
+.lb-fill span{font-size:10px;font-family:var(--mono);color:#fff;white-space:nowrap}
+
+/* PANIC */
+#panic-view{display:none}#panic-view.on{display:block}
+.panic-hdr{background:rgba(224,53,53,.1);border:1px solid rgba(224,53,53,.28);border-radius:12px;padding:.9rem 1.2rem;margin-bottom:1rem;display:flex;align-items:center;gap:.7rem}
+.pdot{width:9px;height:9px;border-radius:50%;background:var(--red);animation:pls 1s infinite;flex-shrink:0}
+.pt{font-family:var(--head);font-size:.95rem;font-weight:700;color:var(--red)}
+.ps{font-size:11px;color:rgba(224,53,53,.7)}
+
+/* EMPTY */
+.empty-s{text-align:center;padding:3rem 1rem;color:var(--t3)}
+.empty-s .big{font-family:var(--head);font-size:2.8rem;margin-bottom:.5rem}
+.empty-s p{font-size:13px}
+
+@keyframes fup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+footer{text-align:center;padding:2rem 1rem;font-size:10px;font-family:var(--mono);color:var(--t3);position:relative;z-index:1}
+@media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr)};nav{padding:0 1rem};main{padding:1.25rem 1rem 5rem};.filter-row{flex-direction:column;align-items:stretch};.go-btn{width:100%}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    FAST<span>Islamabad · Exam Portal</span>
+    <span class="nav-meta" id="nav-season"></span>
+  </div>
+  <div class="nav-right">
+    <button class="chip" id="panic-btn" onclick="togglePanic()">⚡ Panic Mode</button>
+    <button class="chip" id="share-btn" onclick="shareURL()">↗ Share</button>
+  </div>
+</nav>
+
+<main>
+
+  <!-- LOADING -->
+  <div id="loading">
+    <div class="spinner-wrap"><div class="big-spinner"></div></div>
+    <div class="load-title">Loading your datesheet…</div>
+    <div class="load-sub">Hang tight — this takes under a second</div>
+  </div>
+
+  <!-- ERROR -->
+  <div id="error-msg">
+    <div class="err-icon">⚠️</div>
+    <div class="err-title">Could not load exam data</div>
+    <div class="err-sub">Make sure <code>exams.json</code> was generated by the build script.</div>
+  </div>
+
+  <!-- APP (hidden until data loads) -->
+  <div id="app" style="display:none">
+
+    <div class="hero">
+      <div class="eyebrow" id="hero-eyebrow">FAST-NUCES · Islamabad Campus</div>
+      <h1>Your exams,<br><em>crystal clear.</em></h1>
+      <p class="hero-sub">Pick your batch and program. Every exam, every time slot — instant.</p>
+    </div>
+
+    <div class="config">
+      <div class="mode-row">
+        <button class="chip on" id="mode-def" onclick="setMode('default')">Default</button>
+        <button class="chip"   id="mode-cus" onclick="setMode('custom')">Custom / Irregular</button>
+      </div>
+      <div class="filter-row" id="def-row">
+        <div class="field">
+          <label>Batch Year</label>
+          <div class="seg" id="batch-seg"></div>
+        </div>
+        <div class="field">
+          <label>Program</label>
+          <div class="seg" id="prog-seg"></div>
+        </div>
+        <button class="go-btn" onclick="applyFilter()">View My Exams →</button>
+      </div>
+      <div id="cpanel">
+        <div class="field" style="margin-top:.1rem">
+          <label>Select your courses (any batch / program)</label>
+          <div class="cpick" id="cpick"></div>
+        </div>
+        <button class="go-btn" style="margin-top:.85rem;width:100%" onclick="applyFilter()">View Selected →</button>
+      </div>
+    </div>
+
+    <div id="next-banner">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+        <div><div class="blabel">⚡ Next Exam</div><div class="bcourse" id="nc"></div><div class="bmeta" id="nm"></div></div>
+        <div id="nbadge"></div>
+      </div>
+      <div class="cd-row">
+        <div class="cd-blk"><div class="cd-n" id="cdd">0</div><div class="cd-l">days</div></div>
+        <div class="cd-blk"><div class="cd-n" id="cdh">0</div><div class="cd-l">hrs</div></div>
+        <div class="cd-blk"><div class="cd-n" id="cdm">0</div><div class="cd-l">min</div></div>
+        <div class="cd-blk"><div class="cd-n" id="cds">0</div><div class="cd-l">sec</div></div>
+      </div>
+    </div>
+
+    <div id="nbar">
+      <p>🔔 Remind me 2 days before each exam?</p>
+      <div style="display:flex;gap:6px">
+        <button class="ny" onclick="enableNotifs()">Enable</button>
+        <button class="nn" onclick="document.getElementById('nbar').classList.remove('on')">No thanks</button>
+      </div>
+    </div>
+
+    <div id="sched" style="display:none">
+      <div class="stats">
+        <div class="stat"><div class="sl">Total Exams</div><div class="sv" id="s-total">—</div><div class="ss">this schedule</div></div>
+        <div class="stat"><div class="sl">Days To Last</div><div class="sv" id="s-last">—</div><div class="ss">exam remaining</div></div>
+        <div class="stat"><div class="sl">Urgent</div><div class="sv" id="s-urg" style="color:var(--red)">—</div><div class="ss">within 3 days</div></div>
+        <div class="stat"><div class="sl">Longest Gap</div><div class="sv" id="s-gap">—</div><div class="ss">between exams</div></div>
+      </div>
+      <div class="toolbar">
+        <div class="sw"><span class="si">⌕</span><input type="text" id="srch" placeholder="Search by name or code…" oninput="filterList()"></div>
+        <button class="xbtn" onclick="exportICS()">📅 .ics</button>
+        <button class="xbtn" onclick="exportCSV()">📄 CSV</button>
+      </div>
+      <div class="vtabs">
+        <button class="vt on" onclick="switchView('list',this)">☰ List</button>
+        <button class="vt"   onclick="switchView('cal',this)">⊞ Calendar</button>
+        <button class="vt"   onclick="switchView('load',this)">▦ Load</button>
+      </div>
+      <div id="list-view"><div id="exam-list"></div></div>
+      <div id="cal-view">
+        <div class="ch"><button class="cn" onclick="calNav(-1)">‹</button><div class="cm" id="cal-lbl"></div><button class="cn" onclick="calNav(1)">›</button></div>
+        <div class="cgrid" id="cal-grid"></div>
+      </div>
+      <div id="load-view">
+        <p style="font-size:12px;color:var(--t3);font-family:var(--mono);margin-bottom:.85rem">Exam density per day — plan revision around heavy days.</p>
+        <div id="load-bars"></div>
+      </div>
+      <div id="panic-view">
+        <div class="panic-hdr"><div class="pdot"></div><div><div class="pt">PANIC MODE — Next 72 Hours</div><div class="ps">Exams in the next 3 days only</div></div></div>
+        <div id="panic-list"></div>
+      </div>
+    </div>
+
+  </div><!-- /app -->
+
+</main>
+
+<footer>FAST-NUCES Islamabad · Exam Portal · FSC · FSM · EE</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let ALL = [], CUR = [], FILT = [];
+let SEL_BATCH = null, SEL_PROG = null, SEL_MODE = 'default';
+let CAL_MONTH = new Date(), CDI = null, PANIC = false;
+
+// ═══════════════════════════════════════════════════════════
+// BOOT — fetch exams.json generated by the build script
+// ═══════════════════════════════════════════════════════════
+async function boot() {
+  try {
+    const res = await fetch('/exams.json');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    ALL = await res.json();
+    if (!ALL.length) throw new Error('Empty data');
+    init();
+  } catch (err) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error-msg').style.display = 'block';
+    console.error('Failed to load exams.json:', err);
+  }
+}
+
+function init() {
+  // Detect season from data dates
+  const dates  = ALL.map(e => e.date).filter(Boolean).sort();
+  const first  = dates[0], last = dates[dates.length - 1];
+  if (first) {
+    const d = new Date(first + 'T12:00:00');
+    const season = d.getMonth() < 6 ? 'Spring' : 'Fall';
+    const year   = d.getFullYear();
+    document.getElementById('hero-eyebrow').textContent =
+      `FAST-NUCES · Islamabad Campus · ${season} ${year}`;
+    document.getElementById('nav-season').textContent = `${season} ${year}`;
+    CAL_MONTH = new Date(first + 'T12:00:00');
+    CAL_MONTH.setDate(1);
+  }
+
+  buildFilterUI();
+  restorePrefs();
+  handleURLParams();
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+}
+
+// ═══════════════════════════════════════════════════════════
+// BUILD FILTER BUTTONS FROM LIVE DATA
+// ═══════════════════════════════════════════════════════════
+function buildFilterUI() {
+  const batches = [...new Set(ALL.map(e => e.batch).filter(Boolean))].sort().reverse();
+  const progs   = [...new Set(ALL.flatMap(e => e.programs))].filter(Boolean).sort();
+
+  const bs = document.getElementById('batch-seg');
+  batches.forEach((b, i) => {
+    const btn = mkBtn(b, i === 0);
+    btn.onclick = () => { SEL_BATCH = b; hl('batch-seg', b); };
+    bs.appendChild(btn);
+  });
+  SEL_BATCH = batches[0];
+
+  const ps = document.getElementById('prog-seg');
+  progs.forEach((p, i) => {
+    const btn = mkBtn(p, i === 0);
+    btn.onclick = () => { SEL_PROG = p; hl('prog-seg', p); };
+    ps.appendChild(btn);
+  });
+  SEL_PROG = progs[0];
+
+  // Custom picker
+  const cp = document.getElementById('cpick');
+  ALL.forEach(e => {
+    const lbl = document.createElement('label');
+    lbl.innerHTML = `<input type="checkbox" value="${e.code}|${e.date}|${e.time}"> ${e.code} <span style="color:var(--t3)">${e.batch || '?'} · ${e.programs.join('/')}</span>`;
+    cp.appendChild(lbl);
+  });
+}
+
+function mkBtn(txt, active) {
+  const b = document.createElement('button');
+  b.className = 'seg-btn' + (active ? ' on' : '');
+  b.textContent = txt;
+  return b;
+}
+function hl(id, val) {
+  document.querySelectorAll(`#${id} .seg-btn`).forEach(b => b.classList.toggle('on', b.textContent === val));
+}
+
+// ═══════════════════════════════════════════════════════════
+// SAVED PREFS + URL PARAMS
+// ═══════════════════════════════════════════════════════════
+function restorePrefs() {
+  try {
+    const s = JSON.parse(localStorage.getItem('fastisb') || '{}');
+    const batches = [...document.querySelectorAll('#batch-seg .seg-btn')].map(b => b.textContent);
+    const progs   = [...document.querySelectorAll('#prog-seg .seg-btn')].map(b => b.textContent);
+    if (s.batch && batches.includes(s.batch)) { SEL_BATCH = s.batch; hl('batch-seg', s.batch); }
+    if (s.prog  && progs.includes(s.prog))    { SEL_PROG  = s.prog;  hl('prog-seg',  s.prog);  }
+  } catch(e) {}
+}
+
+function handleURLParams() {
+  const p = new URLSearchParams(location.search);
+  const b = p.get('batch'), pr = p.get('prog');
+  const batches = [...document.querySelectorAll('#batch-seg .seg-btn')].map(b => b.textContent);
+  const progs   = [...document.querySelectorAll('#prog-seg .seg-btn')].map(b => b.textContent);
+  if (b  && batches.includes(b))  { SEL_BATCH = b;  hl('batch-seg', b);  }
+  if (pr && progs.includes(pr))   { SEL_PROG  = pr; hl('prog-seg',  pr); }
+  if (b && pr) setTimeout(applyFilter, 100);
+}
+
+// ═══════════════════════════════════════════════════════════
+// MODE TOGGLE
+// ═══════════════════════════════════════════════════════════
+function setMode(m) {
+  SEL_MODE = m;
+  document.getElementById('mode-def').classList.toggle('on', m === 'default');
+  document.getElementById('mode-cus').classList.toggle('on', m === 'custom');
+  document.getElementById('def-row').style.display = m === 'default' ? 'flex' : 'none';
+  document.getElementById('cpanel').classList.toggle('on', m === 'custom');
+}
+
+// ═══════════════════════════════════════════════════════════
+// APPLY FILTER
+// ═══════════════════════════════════════════════════════════
+function applyFilter() {
+  if (SEL_MODE === 'default') {
+    CUR = ALL.filter(e => e.batch === SEL_BATCH && e.programs.includes(SEL_PROG));
+  } else {
+    const chk = new Set([...document.querySelectorAll('#cpick input:checked')].map(i => i.value));
+    CUR = ALL.filter(e => chk.has(`${e.code}|${e.date}|${e.time}`));
+  }
+
+  CUR.sort((a, b) => a.date !== b.date
+    ? a.date.localeCompare(b.date)
+    : toMins(a.time) - toMins(b.time));
+  FILT = [...CUR];
+
+  try { localStorage.setItem('fastisb', JSON.stringify({ batch: SEL_BATCH, prog: SEL_PROG })); } catch(e) {}
+
+  if (!CUR.length) { alert('No exams found for this combination.'); return; }
+  showSched();
+}
+
+function toMins(t) {
+  const m = t.match(/(\d+):(\d+)\s*(AM|PM)/i); if (!m) return 0;
+  let h = parseInt(m[1]), mn = parseInt(m[2]), ap = m[3].toUpperCase();
+  if (ap === 'PM' && h !== 12) h += 12; if (ap === 'AM' && h === 12) h = 0;
+  return h * 60 + mn;
+}
+
+// ═══════════════════════════════════════════════════════════
+// SHOW SCHEDULE
+// ═══════════════════════════════════════════════════════════
+function showSched() {
+  document.getElementById('sched').style.display = 'block';
+  updateStats(); renderList(); renderCal(); renderLoad(); setupBanner(); renderPanic();
+  if ('Notification' in window && Notification.permission === 'default')
+    document.getElementById('nbar').classList.add('on');
+  document.getElementById('sched').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function updateStats() {
+  const urg = CUR.filter(e => { const d = daysUntil(e); return d >= 0 && d <= 3; }).length;
+  const last = CUR[CUR.length - 1];
+  const dLast = last ? Math.max(0, daysUntil(last)) : 0;
+  let maxG = 0;
+  for (let i = 1; i < CUR.length; i++) {
+    const g = Math.round((new Date(CUR[i].date) - new Date(CUR[i-1].date)) / 86400000);
+    if (g > maxG) maxG = g;
+  }
+  document.getElementById('s-total').textContent = CUR.length;
+  document.getElementById('s-last').textContent  = dLast + 'd';
+  document.getElementById('s-urg').textContent   = urg;
+  document.getElementById('s-gap').textContent   = maxG + 'd';
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER LIST
+// ═══════════════════════════════════════════════════════════
+function renderList() {
+  const wrap = document.getElementById('exam-list'); wrap.innerHTML = '';
+  if (!FILT.length) { wrap.innerHTML = '<div class="empty-s"><div class="big">🔍</div><p>No exams match.</p></div>'; return; }
+  let ld = '';
+  FILT.forEach((e, i) => {
+    if (e.date !== ld) {
+      const l = document.createElement('div'); l.className = 'dg-lbl';
+      l.textContent = fmtFull(e.date); wrap.appendChild(l); ld = e.date;
+    }
+    const d = daysUntil(e);
+    const c = document.createElement('div');
+    c.className = 'ec' + (d >= 0 && d <= 3 ? ' urg' : d >= 0 && d <= 7 ? ' wrn' : '');
+    c.style.animationDelay = (i * .03) + 's';
+    const dt = new Date(e.date + 'T12:00:00');
+    let dl;
+    if (d < 0)        dl = `<span class="edl dl-d">Done</span>`;
+    else if (d === 0) dl = `<span class="edl dl-r">Today!</span>`;
+    else if (d <= 3)  dl = `<span class="edl dl-r">${d}d left</span>`;
+    else if (d <= 7)  dl = `<span class="edl dl-a">${d}d left</span>`;
+    else              dl = `<span class="edl dl-g">${d}d left</span>`;
+    c.innerHTML = `<div class="edate"><div class="eday">${dt.getDate()}</div><div class="emon">${dt.toLocaleDateString('en-GB',{month:'short'})}</div></div><div class="einfo"><div class="ecode">${e.code}</div><div class="ename">${e.name}</div><div class="emeta">${e.programs.join(' · ')} · Batch ${e.batch || '?'} · ${e.sheet}</div></div><div class="eright"><div class="etime">${e.time}</div>${dl}</div>`;
+    wrap.appendChild(c);
+  });
+}
+
+function filterList() {
+  const q = document.getElementById('srch').value.toLowerCase();
+  FILT = CUR.filter(e => e.name.toLowerCase().includes(q) || e.code.toLowerCase().includes(q));
+  renderList();
+}
+
+// ═══════════════════════════════════════════════════════════
+// VIEW TOGGLE
+// ═══════════════════════════════════════════════════════════
+function switchView(v, btn) {
+  document.querySelectorAll('.vt').forEach(b => b.classList.remove('on')); btn.classList.add('on');
+  document.getElementById('list-view').style.display = v === 'list' ? 'block' : 'none';
+  document.getElementById('cal-view').classList.toggle('on', v === 'cal');
+  document.getElementById('load-view').classList.toggle('on', v === 'load');
+  if (v === 'cal') renderCal();
+}
+
+// ═══════════════════════════════════════════════════════════
+// CALENDAR
+// ═══════════════════════════════════════════════════════════
+function calNav(d) { CAL_MONTH.setMonth(CAL_MONTH.getMonth() + d); renderCal(); }
+function renderCal() {
+  const grid = document.getElementById('cal-grid'); grid.innerHTML = '';
+  document.getElementById('cal-lbl').textContent = CAL_MONTH.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d => {
+    const h = document.createElement('div'); h.className = 'cdh'; h.textContent = d; grid.appendChild(h);
+  });
+  const first = new Date(CAL_MONTH.getFullYear(), CAL_MONTH.getMonth(), 1);
+  const last  = new Date(CAL_MONTH.getFullYear(), CAL_MONTH.getMonth() + 1, 0);
+  const offset = (first.getDay() + 6) % 7, now = new Date();
+  for (let i = 0; i < offset; i++) { const c = document.createElement('div'); c.className = 'cc empty'; grid.appendChild(c); }
+  for (let d = 1; d <= last.getDate(); d++) {
+    const dt = new Date(CAL_MONTH.getFullYear(), CAL_MONTH.getMonth(), d);
+    const ds = dt.toISOString().slice(0, 10);
+    const dx = CUR.filter(e => e.date === ds);
+    const c = document.createElement('div');
+    c.className = 'cc' + (dt.toDateString() === now.toDateString() ? ' today' : '');
+    const dn = document.createElement('div'); dn.className = 'cdate'; dn.textContent = d; c.appendChild(dn);
+    dx.forEach(e => {
+      const ev = document.createElement('div');
+      const dd = daysUntil(e);
+      ev.className = 'cev' + (dd >= 0 && dd <= 3 ? ' urg-ev' : dd >= 0 && dd <= 7 ? ' wrn-ev' : '');
+      ev.textContent = e.code; ev.title = e.name + ' · ' + e.time; c.appendChild(ev);
+    });
+    grid.appendChild(c);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// LOAD BARS
+// ═══════════════════════════════════════════════════════════
+function renderLoad() {
+  const wrap = document.getElementById('load-bars'); wrap.innerHTML = '';
+  const counts = {}; CUR.forEach(e => { counts[e.date] = (counts[e.date] || 0) + 1; });
+  const max = Math.max(...Object.values(counts), 1);
+  Object.entries(counts).sort((a, b) => a[0].localeCompare(b[0])).forEach(([date, cnt]) => {
+    const pct = (cnt / max) * 100, color = cnt >= 3 ? 'var(--red)' : cnt === 2 ? 'var(--amber)' : 'var(--g)';
+    const row = document.createElement('div'); row.className = 'lb-row';
+    row.innerHTML = `<div class="lb-lbl">${fmtShort(date)}</div><div class="lb-track"><div class="lb-fill" style="width:${pct}%;background:${color}"><span>${cnt} exam${cnt > 1 ? 's' : ''}</span></div></div>`;
+    wrap.appendChild(row);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// PANIC MODE
+// ═══════════════════════════════════════════════════════════
+function togglePanic() {
+  PANIC = !PANIC;
+  document.getElementById('panic-btn').classList.toggle('on', PANIC);
+  document.getElementById('panic-view').classList.toggle('on', PANIC);
+  document.getElementById('list-view').style.display = PANIC ? 'none' : 'block';
+  if (PANIC) renderPanic();
+}
+function renderPanic() {
+  const wrap = document.getElementById('panic-list'); wrap.innerHTML = '';
+  const now = new Date(), cut = new Date(now.getTime() + 3 * 86400000);
+  const urg = CUR.filter(e => { const dt = toDate(e); return dt >= now && dt <= cut; });
+  if (!urg.length) { wrap.innerHTML = '<div class="empty-s"><div class="big">😌</div><p>No exams in the next 72 hours. Breathe.</p></div>'; return; }
+  urg.forEach(e => {
+    const dt = toDate(e), diff = dt - new Date(), h = Math.floor(diff / 3600000);
+    const c = document.createElement('div'); c.className = 'ec urg';
+    const d = new Date(e.date + 'T12:00:00');
+    c.innerHTML = `<div class="edate"><div class="eday">${d.getDate()}</div><div class="emon">${d.toLocaleDateString('en-GB',{month:'short'})}</div></div><div class="einfo"><div class="ecode">${e.code}</div><div class="ename">${e.name}</div></div><div class="eright"><div class="etime">${e.time}</div><span class="edl dl-r">${h}h left</span></div>`;
+    wrap.appendChild(c);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// NEXT EXAM BANNER + COUNTDOWN
+// ═══════════════════════════════════════════════════════════
+function setupBanner() {
+  const now = new Date(), next = CUR.find(e => toDate(e) > now);
+  if (!next) return;
+  const dt = toDate(next), days = Math.ceil((dt - now) / 86400000);
+  document.getElementById('nc').textContent = next.name;
+  document.getElementById('nm').textContent = fmtFull(next.date) + ' · ' + next.time;
+  const badge = document.getElementById('nbadge');
+  if (days <= 3) badge.innerHTML = `<span class="udot u-r"></span><span style="font-size:11px;color:var(--red);font-family:var(--mono)">URGENT</span>`;
+  else if (days <= 7) badge.innerHTML = `<span class="udot u-a"></span><span style="font-size:11px;color:var(--amber);font-family:var(--mono)">THIS WEEK</span>`;
+  else badge.innerHTML = `<span class="udot u-g"></span><span style="font-size:11px;color:var(--gl);font-family:var(--mono)">ON TRACK</span>`;
+  document.getElementById('next-banner').classList.add('on');
+  if (CDI) clearInterval(CDI);
+  function tick() {
+    const diff = toDate(next) - new Date(); if (diff <= 0) { clearInterval(CDI); return; }
+    document.getElementById('cdd').textContent = Math.floor(diff / 86400000);
+    document.getElementById('cdh').textContent = String(Math.floor((diff % 86400000) / 3600000)).padStart(2, '0');
+    document.getElementById('cdm').textContent = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+    document.getElementById('cds').textContent = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+  }
+  tick(); CDI = setInterval(tick, 1000);
+}
+
+// ═══════════════════════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════
+function enableNotifs() {
+  Notification.requestPermission().then(p => {
+    document.getElementById('nbar').classList.remove('on');
+    if (p === 'granted') {
+      const now = new Date();
+      CUR.forEach(e => {
+        const dt = toDate(e), remind = new Date(dt.getTime() - 2 * 86400000), delay = remind - now;
+        if (delay > 0) setTimeout(() => new Notification('📋 FAST Exam Reminder', { body: e.name + ' in 2 days — ' + fmtFull(e.date) + ' at ' + e.time }), delay);
+      });
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// EXPORTS
+// ═══════════════════════════════════════════════════════════
+function exportCSV() {
+  let csv = 'Code,Name,Date,Time,Batch,Programs,Sheet\n';
+  CUR.forEach(e => csv += `"${e.code}","${e.name}","${e.date}","${e.time}","${e.batch || ''}","${e.programs.join('/')}","${e.sheet}"\n`);
+  dl('fast_exams.csv', 'text/csv', csv);
+}
+function exportICS() {
+  const hhmm = t => { const m = t.match(/(\d+):(\d+)\s*(AM|PM)/i); if (!m) return '090000'; let h = parseInt(m[1]), mn = parseInt(m[2]), ap = m[3].toUpperCase(); if (ap === 'PM' && h !== 12) h += 12; if (ap === 'AM' && h === 12) h = 0; return String(h).padStart(2,'0') + String(mn).padStart(2,'0') + '00'; };
+  let ics = 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//FAST ISB Exam Portal//EN\n';
+  CUR.forEach(e => {
+    const ds = e.date.replace(/-/g,''), ts = hhmm(e.time), te = String(parseInt(ts.slice(0,2)) + 1).padStart(2,'0') + ts.slice(2);
+    ics += `BEGIN:VEVENT\nSUMMARY:${e.code} - ${e.name}\nDTSTART:${ds}T${ts}\nDTEND:${ds}T${te}\nDESCRIPTION:${e.programs.join('/')} Batch ${e.batch || '?'} · ${e.time}\nEND:VEVENT\n`;
+  });
+  ics += 'END:VCALENDAR';
+  dl('fast_exams.ics', 'text/calendar', ics);
+}
+function dl(name, type, content) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], { type })); a.download = name; a.click(); }
+
+// ═══════════════════════════════════════════════════════════
+// SHARE
+// ═══════════════════════════════════════════════════════════
+function shareURL() {
+  const url = location.href.split('?')[0] + `?batch=${SEL_BATCH}&prog=${SEL_PROG}`;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => {
+      const b = document.getElementById('share-btn');
+      b.textContent = '✓ Copied!'; setTimeout(() => b.textContent = '↗ Share', 2000);
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════
+function toDate(e) {
+  const m = e.time.match(/(\d+):(\d+)\s*(AM|PM)/i); let h = 9, mn = 0;
+  if (m) { h = parseInt(m[1]); mn = parseInt(m[2]); if (m[3].toUpperCase() === 'PM' && h !== 12) h += 12; if (m[3].toUpperCase() === 'AM' && h === 12) h = 0; }
+  const d = new Date(e.date + 'T00:00:00'); d.setHours(h, mn, 0, 0); return d;
+}
+function daysUntil(e) { return Math.ceil((toDate(e) - new Date()) / 86400000); }
+function fmtFull(ds) { return new Date(ds + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); }
+function fmtShort(ds) { return new Date(ds + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); }
+
+// ─── START ───
+boot();
+</script>
+</body>
+</html>
