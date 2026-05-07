@@ -15,26 +15,15 @@ const INPUT  = path.join(__dirname, "../datesheet.xlsx");
 const OUTPUT = path.join(__dirname, "../public/exams.json");
 
 // Time slot columns (0-based index in the row array → display label)
+// New schedule: 3 time slots per day
 const TIME_COLS = {
-  1:  "9:00 AM",
-  3:  "10:20 AM",
-  5:  "11:40 AM",
-  7:  "1:00 PM",
-  9:  "2:30 PM",
-  11: "3:50 PM",
-  13: "5:20 PM",
-  15: "7:00 PM",
+  1: "9:00 AM - 12:00 PM",
+  3: "1:00 PM - 4:00 PM",
+  5: "5:00 PM - 8:00 PM",
 };
 
-// EE sheet only has 6 slots (no evening slots)
-const TIME_COLS_SHORT = {
-  1:  "9:00 AM",
-  3:  "10:20 AM",
-  5:  "11:40 AM",
-  7:  "1:00 PM",
-  9:  "2:30 PM",
-  11: "3:50 PM",
-};
+// All sheets use the same structure now
+const TIME_COLS_SHORT = TIME_COLS;
 
 // Rows to skip
 const SKIP = /jumma|seating plan|days &|issued:|detail|manager|abdul|^\s*[\.\-]\s*$|\d+:\d+\s*to\s*\d+/i;
